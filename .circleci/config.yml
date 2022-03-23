@@ -1,0 +1,38 @@
+version: 2.1
+orbs:
+  docker: circleci/docker@2.0.2
+environment:
+  DOCKER_LOGIN: ""
+jobs:
+  step-1:
+    docker:
+      - image: docker:17.05.0-ce-git
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: "install dependencies"
+          command: |
+            apk add --no-cache \
+              py-pip=9.0.0-r1
+            pip install --upgrade pip \
+            pip install \
+              docker-compose==1.12.0 \
+              awscli==1.11.76
+      - run:
+          name: "build docker image"
+          command: |
+            docker build -t dmvPOC-valet/circleci-migration:1.0.0 .           
+  step-2:
+    executor:
+      name: docker/docker
+    steps:
+      - checkout     
+      - setup_remote_docker
+      - docker/build:
+          image: dmvPOC-valet/aws-migration     
+workflows:
+  running-steps:
+    jobs:
+      - step-1
+      - step-2   
